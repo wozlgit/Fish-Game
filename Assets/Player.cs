@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
@@ -12,12 +13,13 @@ public class Player : MonoBehaviour
     float powerUpDeaccelerationLeft = 0;
     [SerializeField] float powerUpAcceleration = 1000;
     [SerializeField] float deacclerationSpeed = 30;
+    bool taking_knockback = false;
+    Vector3 current_knockback;
+    [SerializeField] float knockbackDeacceleration = 0.1f;
     float health;
     void Start()
     {
         health = max_health;
-        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-        rigidbody.AddForce(movement_speed * transform.up, ForceMode2D.Force);
     }
 
     // Update is called once per frame
@@ -28,8 +30,6 @@ public class Player : MonoBehaviour
 
     private void UpdateTransform()
     {
-        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-        rigidbody.AddForce(-movement_speed * transform.up, ForceMode2D.Force);
         if (Input.GetKey(KeyCode.DownArrow))
         {
             transform.Rotate(-angleStep * Time.deltaTime * Vector3.forward);
@@ -46,24 +46,33 @@ public class Player : MonoBehaviour
         {
             transform.eulerAngles = new Vector3(0, 0, 315);
         }
-        rigidbody.AddForce(movement_speed * transform.up, ForceMode2D.Force);
-        float deaccleration = Math.Min(deacclerationSpeed, powerUpDeaccelerationLeft);
-        rigidbody.AddForce(deaccleration * transform.up, ForceMode2D.Force);
+        float powerUpDeacceleration = Math.Min(deacclerationSpeed, powerUpDeaccelerationLeft);
+        movement_speed -= powerUpDeacceleration;
+        powerUpDeaccelerationLeft -= powerUpDeacceleration;
+        if (taking_knockback) {
+            float newKnockback = current_knockback.magnitude - knockbackDeacceleration;
+            current_knockback = current_knockback.normalized * newKnockback;
+            if (current_knockback.sqrMagnitude <= 0) {
+                taking_knockback = false;
+            }
+            Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+            rigidbody.velocity = current_knockback;
+        }
+        else {
+            GetComponent<Rigidbody2D>().velocity = movement_speed * transform.up;
+        }
     }
+    // Player collided with powerup
     void OnTriggerEnter2D(Collider2D collider) {
         movement_speed += powerUpAcceleration;
-        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-        rigidbody.AddForce(transform.up * powerUpAcceleration, ForceMode2D.Force);
         powerUpDeaccelerationLeft = powerUpAcceleration;
         Destroy(collider.gameObject);
     }
-    // Player should always move "forward"
-    // But added to that should be other forces (knockback, collision, etc.)s
     void OnCollisionEnter2D(Collision2D collider) {
-        Shark shark = gameObject.GetComponent("Shark") as Shark;
-        if(shark != null) {
+        if(collider.gameObject.TryGetComponent<Shark>(out var shark)) {
             health -= shark.damage;
-            //Vector3 knockback = collider.gameObject.transform.
+            taking_knockback = true;
+            current_knockback = collider.gameObject.GetComponent<Rigidbody2D>().velocity.normalized * shark.knockback;
         }
     }
 }
