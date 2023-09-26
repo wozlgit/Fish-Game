@@ -1,0 +1,4 @@
+- Rotating player should be instantenous
+- Other entities should change their movement direction using physics
+- When there's a collision, knockback should be applied (could use physics)
+- Need collision detection
