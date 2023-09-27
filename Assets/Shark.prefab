@@ -151,7 +151,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 5
-  knockback: 50
+  knockback: 500
   health: 5
   baseSpeed: 4
   player: {fileID: 0}

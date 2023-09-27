@@ -674,7 +674,7 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
-  m_AngularDrag: 0
+  m_AngularDrag: 1000
   m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -704,7 +704,6 @@ MonoBehaviour:
   max_health: 100
   powerUpAcceleration: 9
   deacclerationSpeed: 0.1
-  knockbackDeacceleration: 3
 --- !u!212 &1933820758
 SpriteRenderer:
   m_ObjectHideFlags: 0

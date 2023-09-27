@@ -7,15 +7,22 @@ using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
+    private const float knockbackTime = 35;
     [SerializeField] float movement_speed = 1.0f;
     [SerializeField] float angleStep = 15.0f;
     [SerializeField] float max_health = 100;
     float powerUpDeaccelerationLeft = 0;
     [SerializeField] float powerUpAcceleration = 1000;
     [SerializeField] float deacclerationSpeed = 30;
-    bool taking_knockback = false;
-    Vector3 current_knockback;
-    [SerializeField] float knockbackDeacceleration = 0.1f;
+    public class Knockback {
+        public Vector2 knockbackLeft;
+        public float timeLeft;
+        public Knockback(Vector2 aKnockbackLeft, float aTimeLeft) {
+            knockbackLeft = aKnockbackLeft;
+            timeLeft = aTimeLeft;
+        }
+    }
+    List<Knockback> knockbacks = new List<Knockback>();
     float health;
     void Start()
     {
@@ -49,14 +56,33 @@ public class Player : MonoBehaviour
         float powerUpDeacceleration = Math.Min(deacclerationSpeed, powerUpDeaccelerationLeft);
         movement_speed -= powerUpDeacceleration;
         powerUpDeaccelerationLeft -= powerUpDeacceleration;
-        if (taking_knockback) {
+        
+        if (knockbacks.Count > 0) {
+            Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+            rigidbody.velocity = new(0, 0);
+            for (int i = 0; i < knockbacks.Count; i++) {
+                Vector2 used_knockack = knockbacks[i].knockbackLeft / knockbacks[i].timeLeft;
+                rigidbody.velocity += used_knockack;
+                knockbacks[i].timeLeft -= 1;
+                knockbacks[i].knockbackLeft -= used_knockack;
+                if (knockbacks[i].timeLeft <= 0) {
+                    knockbacks.Remove(knockbacks[i]);
+                }
+            }
+            /*
             float newKnockback = current_knockback.magnitude - knockbackDeacceleration;
             current_knockback = current_knockback.normalized * newKnockback;
             if (current_knockback.sqrMagnitude <= 0) {
                 taking_knockback = false;
             }
-            Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-            rigidbody.velocity = current_knockback;
+            */
+            /*
+            Vector2 vel = rigidbody.velocity;
+            transform.position = Vector2.SmoothDamp(transform.position, current_knockback, ref vel, 10);
+            if (rigidbody.velocity.sqrMagnitude <= 0.001) {
+                taking_knockback = false;
+            }
+            */
         }
         else {
             GetComponent<Rigidbody2D>().velocity = movement_speed * transform.up;
@@ -67,12 +93,19 @@ public class Player : MonoBehaviour
         movement_speed += powerUpAcceleration;
         powerUpDeaccelerationLeft = powerUpAcceleration;
         Destroy(collider.gameObject);
+        Vector2 vs = new(0, 0);
+        Vector2 vt = new(5, 5);
+        Vector2 vv = new(1, 0);
+        while (vv.sqrMagnitude > 0.001) {
+            print(vv);
+            vv = Vector2.SmoothDamp(vs, vt, ref vv, 1);
+        }
     }
     void OnCollisionEnter2D(Collision2D collider) {
         if(collider.gameObject.TryGetComponent<Shark>(out var shark)) {
             health -= shark.damage;
-            taking_knockback = true;
-            current_knockback = collider.gameObject.GetComponent<Rigidbody2D>().velocity.normalized * shark.knockback;
+            Vector2 k = collider.gameObject.GetComponent<Rigidbody2D>().velocity.normalized * shark.knockback;
+            knockbacks.Add(new Knockback(k, knockbackTime));
         }
     }
 }
