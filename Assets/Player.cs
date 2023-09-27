@@ -56,9 +56,9 @@ public class Player : MonoBehaviour
         float powerUpDeacceleration = Math.Min(deacclerationSpeed, powerUpDeaccelerationLeft);
         movement_speed -= powerUpDeacceleration;
         powerUpDeaccelerationLeft -= powerUpDeacceleration;
-        
+
+        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
         if (knockbacks.Count > 0) {
-            Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
             rigidbody.velocity = new(0, 0);
             for (int i = 0; i < knockbacks.Count; i++) {
                 Vector2 used_knockack = knockbacks[i].knockbackLeft / knockbacks[i].timeLeft;
@@ -69,36 +69,18 @@ public class Player : MonoBehaviour
                     knockbacks.Remove(knockbacks[i]);
                 }
             }
-            /*
-            float newKnockback = current_knockback.magnitude - knockbackDeacceleration;
-            current_knockback = current_knockback.normalized * newKnockback;
-            if (current_knockback.sqrMagnitude <= 0) {
-                taking_knockback = false;
-            }
-            */
-            /*
-            Vector2 vel = rigidbody.velocity;
-            transform.position = Vector2.SmoothDamp(transform.position, current_knockback, ref vel, 10);
-            if (rigidbody.velocity.sqrMagnitude <= 0.001) {
-                taking_knockback = false;
-            }
-            */
         }
         else {
-            GetComponent<Rigidbody2D>().velocity = movement_speed * transform.up;
+            rigidbody.velocity = movement_speed * transform.up;
         }
+        GameObject.Find("Stage").GetComponent<GameStage>().PlayerMoved(rigidbody.velocity);
     }
     // Player collided with powerup
     void OnTriggerEnter2D(Collider2D collider) {
-        movement_speed += powerUpAcceleration;
-        powerUpDeaccelerationLeft = powerUpAcceleration;
-        Destroy(collider.gameObject);
-        Vector2 vs = new(0, 0);
-        Vector2 vt = new(5, 5);
-        Vector2 vv = new(1, 0);
-        while (vv.sqrMagnitude > 0.001) {
-            print(vv);
-            vv = Vector2.SmoothDamp(vs, vt, ref vv, 1);
+        if (collider.gameObject.GetComponent<PowerUp>() != null) {
+            movement_speed += powerUpAcceleration;
+            powerUpDeaccelerationLeft = powerUpAcceleration;
+            Destroy(collider.gameObject);
         }
     }
     void OnCollisionEnter2D(Collision2D collider) {

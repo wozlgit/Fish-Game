@@ -14,7 +14,7 @@ Solution: Nr 2
   - Enemy interaction:
     - Enemy ideas:
       - Shark (fast melee; deal dmg)
-      - Fake powerup (explode on collision; deal dmg; heave? knockback) - Inspiration from life-bulb fish
+      - Fake powerup (explode on collision; deal dmg; heavy? knockback) - Inspiration from life-bulb fish
       - Neutral "whales" (big fish that deals knockback on getting close; not possible to get that close to it; eats powerups (but maybe not fake ones? could be an interesting way for the player to see which powerups are "safe"))
       - Fish that pull the player towards them
       - 

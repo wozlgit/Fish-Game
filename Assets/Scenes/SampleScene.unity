@@ -185,7 +185,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 10
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -319,10 +319,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a000e183311504d4b8499d4c0ab19b5b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spawn_frequence: 5
+  cycleTime: 5
   player: {fileID: 1933820754}
-  spawn_offset: 10
+  powerupSpawnOffset: 20
+  sharkSpawnOffset: 60
   powerUpPrefab: {fileID: 4267911306901178756, guid: dfb01c408b8d1504f8ccfec42885d462, type: 3}
+  sharkPrefab: {fileID: 704075057181267732, guid: d191ca4bbb9707f4f928d52f42c4763d, type: 3}
+  plantPrefab: {fileID: 4044798289530625033, guid: b2758ee9c3217a84499f7e4483aef96a, type: 3}
+  gameAreaHeight: 10
 --- !u!4 &1027186517
 Transform:
   m_ObjectHideFlags: 0
