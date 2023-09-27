@@ -37,6 +37,10 @@ Solution: Nr 2
 - When tired, will go to sleep in plantation
 - Will be awakened and angered if player comes too close
 
+# Whale
+- Needs some sort of state model like shark (so it doesn't just constantly eat powerups)
+- It's behaviour could just be limited to moving around and eating powerups
+
 # Evolution
 - Improved senses (Lateral line sense/Electric sense) (can see sharks hidden in plantation easier; this could lower the fun of the game; or maybe make it so 
   even with very high levels of this (if there will be multiple levels), the player still can't see threats very well; this could make it so getting this is

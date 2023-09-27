@@ -18,11 +18,14 @@ public class GameStage : MonoBehaviour
     [SerializeField] GameObject powerUpPrefab;
     [SerializeField] GameObject sharkPrefab;
     [SerializeField] GameObject plantPrefab;
-    [SerializeField] float gameAreaHeight = 10;
+    [SerializeField] GameObject whalePrefab;
+    public int gameAreaHeight = 10;
+    public int gameAreaWidth = 12;
     void Start()
     {
         lastPlayerPosX = Mathf.FloorToInt(player.transform.position.x);
-        GenerateTerrain(-12, 12);
+        whaleCountdown = whaleSpawnFreq;
+        GenerateTerrain(-gameAreaWidth, gameAreaWidth);
     }
     void Update()
     {
@@ -61,12 +64,20 @@ public class GameStage : MonoBehaviour
         Instantiate(sharkPrefab, pos, Quaternion.identity);
     }
     int lastPlayerPosX;
+    const int whaleSpawnFreq = 20;
+    int whaleCountdown;
     public void PlayerMoved(Vector2 velocity) {
         int cx = Mathf.FloorToInt(player.transform.position.x);
         int difX = cx - lastPlayerPosX;
         if (difX > 0)
         {
-            GenerateTerrain(lastPlayerPosX + 1, lastPlayerPosX + difX);
+            whaleCountdown -= difX;
+            if (whaleCountdown <= 0) {
+                whaleCountdown = whaleSpawnFreq + whaleCountdown;
+                Vector2 pos = new(cx + gameAreaWidth, Random.Range(-gameAreaHeight, gameAreaHeight));
+                Instantiate(whalePrefab, pos, Quaternion.identity);
+            }
+            GenerateTerrain(lastPlayerPosX + 1 + gameAreaWidth, lastPlayerPosX + difX + gameAreaWidth);
             lastPlayerPosX = cx;
         }
     }
