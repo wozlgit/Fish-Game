@@ -82,6 +82,12 @@ public class Player : MonoBehaviour
             powerUpDeaccelerationLeft = powerUpAcceleration;
             Destroy(collider.gameObject);
         }
+        else if (collider.gameObject.TryGetComponent(out FakePowerUp fakePowerUp)) {
+            Vector2 knockback = -1 * GetComponent<Rigidbody2D>().velocity.normalized * fakePowerUp.knockback;
+            knockbacks.Add(new Knockback(knockback, knockbackTime));
+            health -= fakePowerUp.damage;
+            Destroy(collider.gameObject);
+        }
     }
     void OnCollisionEnter2D(Collision2D collider) {
         if(collider.gameObject.TryGetComponent<Shark>(out var shark)) {

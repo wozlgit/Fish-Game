@@ -5,11 +5,12 @@ using UnityEngine;
 
 public class GameStage : MonoBehaviour
 {
+    [SerializeField] double fakePowerupSpawnFreq = 0.2;
     [SerializeField] double plantSharkSpawnFreq = 0.05;
     [SerializeField] double plantationSpawnFreq = 0.3;
     [SerializeField] double plantationSpawnMoreChanceMult = 0.2;
     float time_counter = 0;
-    [SerializeField] float cycleTime = 5;
+    [SerializeField] float cycleTime = 0.02f;
     float sharkTimer = 0;
     [SerializeField] GameObject player;
     [SerializeField] float powerupSpawnOffset = 20;
@@ -46,7 +47,11 @@ public class GameStage : MonoBehaviour
         Vector3 pos = new Vector3(powerupSpawnOffset, 0, 0);
         pos.x += player.transform.position.x;
         pos.y = Random.Range(-gameAreaHeight, gameAreaHeight);
-        GameObject.Instantiate(powerUpPrefab, pos, Quaternion.identity);
+        GameObject powerUp = GameObject.Instantiate(powerUpPrefab, pos, Quaternion.identity);
+        if (Random.value < fakePowerupSpawnFreq) {
+            Destroy(powerUp.GetComponent<PowerUp>());
+            FakePowerUp fakePowerUp = powerUp.AddComponent<FakePowerUp>();
+        }
     }
     private void CreateShark()
     {
