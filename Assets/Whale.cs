@@ -5,6 +5,7 @@ class Whale: MonoBehaviour {
     public WhaleState state = WhaleState.HUNGRY;
     float currentSpeed;
     public float baseSpeed;
+    public float knockback;
     void Start() {
         currentSpeed = baseSpeed;
     }
@@ -14,7 +15,7 @@ class Whale: MonoBehaviour {
             GameObject[] powerups = GameObject.FindGameObjectsWithTag("PowerUp");
             GameObject target = ClosestGameObject(powerups);
             if (target != null) {
-                MoveTowardsTarget(target, currentSpeed);
+                Utility.MoveTowardsTarget(gameObject, target, currentSpeed, 10);
             }
         }
     }
@@ -35,13 +36,11 @@ class Whale: MonoBehaviour {
 
         return target;
     }
-
-    float MoveTowardsTarget(GameObject target, float speed)
-    {
-        Vector3 dif = target.transform.position - transform.position;
-        Vector3 direction = dif.normalized;
-        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-        rigidbody.velocity = direction * speed;
-        return dif.magnitude;
+    void OnTriggerEnter2D(Collider2D collider) {
+        GameObject col = collider.gameObject;
+        if (col.TryGetComponent<Knockbackable>(out var knockbackable)) {
+            Vector2 dir = GetComponent<Rigidbody2D>().velocity;//.normalized;
+            knockbackable.ApplyKnockback(new(dir, 35));
+        }
     }
 }

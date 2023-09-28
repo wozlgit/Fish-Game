@@ -5,38 +5,44 @@ using UnityEngine;
 
 public class GameStage : MonoBehaviour
 {
-    [SerializeField] double fakePowerupSpawnFreq = 0.2;
+    [SerializeField] int maxPlantationLevel = 4;
     [SerializeField] double plantSharkSpawnFreq = 0.05;
     [SerializeField] double plantationSpawnFreq = 0.3;
     [SerializeField] double plantationSpawnMoreChanceMult = 0.2;
-    float time_counter = 0;
-    [SerializeField] float cycleTime = 0.02f;
-    float sharkTimer = 0;
-    [SerializeField] GameObject player;
+    [SerializeField] double fakePowerupSpawnFreq = 0.2;
+    [SerializeField] int whaleSpawnCooldown = 20;
+    [SerializeField] int sharkSpawnCooldown = 4;
+    [SerializeField] float cycleTime = 0.1f;
+
     [SerializeField] float powerupSpawnOffset = 20;
-    [SerializeField] float sharkSpawnOffset = 60;
+    [SerializeField] float sharkSpawnOffset;
+
+    [SerializeField] GameObject player;
     [SerializeField] GameObject powerUpPrefab;
     [SerializeField] GameObject sharkPrefab;
     [SerializeField] GameObject plantPrefab;
     [SerializeField] GameObject whalePrefab;
     public int gameAreaHeight = 10;
-    public int gameAreaWidth = 12;
+    public int gameAreaWidth = 18;
+    float time_counter = 0;
+    float sharkTimer = 0;
     void Start()
     {
         lastPlayerPosX = Mathf.FloorToInt(player.transform.position.x);
-        whaleCountdown = whaleSpawnFreq;
+        whaleCountdown = whaleSpawnCooldown;
+        sharkSpawnOffset = gameAreaWidth;
         GenerateTerrain(-gameAreaWidth, gameAreaWidth);
     }
     void Update()
     {
-        time_counter += Time.deltaTime;
         sharkTimer += Time.deltaTime;
+        time_counter += Time.deltaTime;
         if (time_counter > cycleTime)
         {
             CreatePowerUp();
             time_counter = 0;
         }
-        else if (sharkTimer > 2) {
+        else if (sharkTimer > sharkSpawnCooldown) {
             sharkTimer = 0;
             int sharkCount = Mathf.FloorToInt(time_counter / 2);
             for (int i = 0; i < sharkCount; i++) {
@@ -53,7 +59,7 @@ public class GameStage : MonoBehaviour
         GameObject powerUp = GameObject.Instantiate(powerUpPrefab, pos, Quaternion.identity);
         if (Random.value < fakePowerupSpawnFreq) {
             Destroy(powerUp.GetComponent<PowerUp>());
-            FakePowerUp fakePowerUp = powerUp.AddComponent<FakePowerUp>();
+            powerUp.AddComponent<FakePowerUp>();
         }
     }
     private void CreateShark()
@@ -64,7 +70,6 @@ public class GameStage : MonoBehaviour
         Instantiate(sharkPrefab, pos, Quaternion.identity);
     }
     int lastPlayerPosX;
-    const int whaleSpawnFreq = 20;
     int whaleCountdown;
     public void PlayerMoved(Vector2 velocity) {
         int cx = Mathf.FloorToInt(player.transform.position.x);
@@ -73,11 +78,16 @@ public class GameStage : MonoBehaviour
         {
             whaleCountdown -= difX;
             if (whaleCountdown <= 0) {
-                whaleCountdown = whaleSpawnFreq + whaleCountdown;
+                whaleCountdown = whaleSpawnCooldown + whaleCountdown;
                 Vector2 pos = new(cx + gameAreaWidth, Random.Range(-gameAreaHeight, gameAreaHeight));
                 Instantiate(whalePrefab, pos, Quaternion.identity);
             }
             GenerateTerrain(lastPlayerPosX + 1 + gameAreaWidth, lastPlayerPosX + difX + gameAreaWidth);
+            foreach (var plant in GameObject.FindGameObjectsWithTag("SharkSleepingPlace")) {
+                if (plant.transform.position.x <= cx - gameAreaWidth * 2) {
+                    Destroy(plant);
+                }
+            }
             lastPlayerPosX = cx;
         }
     }
@@ -87,7 +97,7 @@ public class GameStage : MonoBehaviour
         for (int x = beginX; x <= endX; x++)
         {
             int plantationLevel = 0;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < maxPlantationLevel; i++)
             {
                 float r = Random.value;
                 if (r < plantationSpawnFreq + i * plantationSpawnMoreChanceMult) plantationLevel++;

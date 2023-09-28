@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,26 +11,31 @@ public class Player : MonoBehaviour
     private const float knockbackTime = 35;
     [SerializeField] float movement_speed = 1.0f;
     [SerializeField] float angleStep = 15.0f;
-    [SerializeField] float max_health = 100;
     float powerUpDeaccelerationLeft = 0;
     [SerializeField] float powerUpAcceleration = 1000;
     [SerializeField] float deacclerationSpeed = 30;
-    public class Knockback {
-        public Vector2 knockbackLeft;
-        public float timeLeft;
-        public Knockback(Vector2 aKnockbackLeft, float aTimeLeft) {
-            knockbackLeft = aKnockbackLeft;
-            timeLeft = aTimeLeft;
+    public float maxHealth = 200;
+    private float _health;
+    public float health {
+        get => _health;
+        set {
+            _health = value;
+            if (_health <= 0) {
+                // Game over
+                Time.timeScale = 0;
+                GameObject text = new("GameOver");
+                text.transform.parent = GameObject.Find("Canvas").transform;
+                text.transform.position = GameObject.Find("Player").transform.position;
+                TextMeshPro t = text.AddComponent<TextMeshPro>();
+                t.text = "Game over";
+            }
         }
     }
-    List<Knockback> knockbacks = new List<Knockback>();
-    float health;
     void Start()
     {
-        health = max_health;
+        health = maxHealth;
     }
 
-    // Update is called once per frame
     void Update()
     {
         UpdateTransform();
@@ -58,23 +64,12 @@ public class Player : MonoBehaviour
         powerUpDeaccelerationLeft -= powerUpDeacceleration;
 
         Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-        if (knockbacks.Count > 0) {
-            rigidbody.velocity = new(0, 0);
-            for (int i = 0; i < knockbacks.Count; i++) {
-                Vector2 used_knockack = knockbacks[i].knockbackLeft / knockbacks[i].timeLeft;
-                rigidbody.velocity += used_knockack;
-                knockbacks[i].timeLeft -= 1;
-                knockbacks[i].knockbackLeft -= used_knockack;
-                if (knockbacks[i].timeLeft <= 0) {
-                    knockbacks.Remove(knockbacks[i]);
-                }
-            }
-        }
-        else {
+        if (!GetComponent<Knockbackable>().TakingKnockback()) {
             rigidbody.velocity = movement_speed * transform.up;
         }
         GameObject.Find("Stage").GetComponent<GameStage>().PlayerMoved(rigidbody.velocity);
     }
+
     // Player collided with powerup
     void OnTriggerEnter2D(Collider2D collider) {
         if (collider.gameObject.GetComponent<PowerUp>() != null) {
@@ -83,8 +78,8 @@ public class Player : MonoBehaviour
             Destroy(collider.gameObject);
         }
         else if (collider.gameObject.TryGetComponent(out FakePowerUp fakePowerUp)) {
-            Vector2 knockback = -1 * GetComponent<Rigidbody2D>().velocity.normalized * fakePowerUp.knockback;
-            knockbacks.Add(new Knockback(knockback, knockbackTime));
+            Vector2 k = -1 * GetComponent<Rigidbody2D>().velocity.normalized * fakePowerUp.knockback;
+            GetComponent<Knockbackable>().ApplyKnockback(new (k, knockbackTime));
             health -= fakePowerUp.damage;
             Destroy(collider.gameObject);
         }
@@ -93,7 +88,7 @@ public class Player : MonoBehaviour
         if(collider.gameObject.TryGetComponent<Shark>(out var shark)) {
             health -= shark.damage;
             Vector2 k = collider.gameObject.GetComponent<Rigidbody2D>().velocity.normalized * shark.knockback;
-            knockbacks.Add(new Knockback(k, knockbackTime));
+            GetComponent<Knockbackable>().ApplyKnockback(new (k, knockbackTime));
         }
     }
 }

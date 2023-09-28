@@ -14,6 +14,8 @@ public class Shark : MonoBehaviour
     public float knockback;
     public float health;
     public float baseSpeed;
+    [SerializeField] GameObject gameStageObj;
+    private GameStage gameStage;
     [SerializeField] GameObject player;
     public MentalState state = MentalState.HUNGRY;
     float hungriness = 0;
@@ -25,11 +27,11 @@ public class Shark : MonoBehaviour
     void Start()
     {
         player = GameObject.Find("Player");
+        gameStageObj = GameObject.Find("Stage");
+        gameStage = gameStageObj.GetComponent<GameStage>();
         currentSpeed = baseSpeed;
         target = player;
     }
-
-    // Update is called once per frame
     void Update()
     {
         if (state == MentalState.ANGRY) GetComponent<SpriteRenderer>().color = angryColor;
@@ -67,7 +69,7 @@ public class Shark : MonoBehaviour
             if (target != null) {
                 target.GetComponent<Plant>().isClaimed = true;
                 target.GetComponent<Plant>().claimedBy = gameObject;
-                float distance = MoveTowardsTarget(target);
+                float distance = Utility.MoveTowardsTarget(gameObject, target, currentSpeed);;
                 if (distance < 0.1) {
                     state = MentalState.SLEEPING;
                     GetComponent<Rigidbody2D>().velocity = new(0, 0);
@@ -84,15 +86,12 @@ public class Shark : MonoBehaviour
         if ((state == MentalState.HUNGRY || state == MentalState.ANGRY)
         && target == player)
         {
-            MoveTowardsTarget(player);
+            Utility.MoveTowardsTarget(gameObject, target, currentSpeed);
         }
-    }
-    float MoveTowardsTarget(GameObject target)
-    {
-        Vector3 dif = target.transform.position - transform.position;
-        Vector3 direction = dif.normalized;
-        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-        rigidbody.velocity = direction * currentSpeed;
-        return dif.magnitude;
+
+        if (transform.position.y < -gameStage.gameAreaHeight
+        || transform.position.y > gameStage.gameAreaHeight) {
+            Destroy(gameObject);
+        }
     }
 }
