@@ -104,3 +104,31 @@ Evolution
     - Smoke bomb
     - Dodge/thrusters
     - 
+
+Problems:
+    - Dodging sharks by changing course is often not possible, and when it is, trivial and boring
+    - There is no other way to dodge sharks rn: there absolutely should be
+        - This will be fixed by whale behaviours
+    - Plantation is a more dangerous place than others; so there has to be a reason to go there
+        ? Maybe evolution could be advanced only there?
+            - For this to be feasible, plantation would have to be a way bigger area: in it's current state
+              it's so small that in there, the player can only go forward, which is very boring
+    - Fake powerups need way more polish
+    - Also, there should be other things to dodge too: if sharks and fake powerups are the only enemy,
+      damage is the only way to lose the game, and whales' are the only obstacle, then there just isn't enough
+      to the game.
+        - Don't think fishing nets are enough either, because they are just big squares
+        - Static or dynamic? Most of the time static but can interact with the environment?
+          ? Floating small objects that the player can push around, and that whales' will chase quickly
+          ? Static walls
+            - Might easily mean trouble for enemy pathfinding
+            - To compensate, maybe whales' would be able to go through walls and break them in the process
+            - These would have to make the game harder, not easier, i.e. shouldn't just restrict options to more
+              boring ones (like going straight), but instead restrict options to harder ones
+    - Player is way too slow
+
+    !1 Make player way faster
+    !2 Implement static walls that restrict movement a lot, but that whales' break upon contact. Whales' will every once in a while
+       go through them in a fast burst to achieve some goal. There should be some signs of when the whales' are about to charge, or the
+       player should be to roughly estimate when
+    !3 Implement some timed events
