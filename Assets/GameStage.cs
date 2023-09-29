@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -22,16 +20,23 @@ public class GameStage : MonoBehaviour
     [SerializeField] GameObject sharkPrefab;
     [SerializeField] GameObject plantPrefab;
     [SerializeField] GameObject whalePrefab;
-    public int gameAreaHeight = 10;
-    public int gameAreaWidth = 18;
+    [SerializeField] GameObject staticObstaclePrefab;
+    public const int gameAreaHeight = 10;
+    public const int gameAreaWidth = 18;
+    const float holeSize = 2;
+    const float pillarSizeY = gameAreaHeight * 2;
     float time_counter = 0;
     float sharkTimer = 0;
+    public static GameStage Get() {
+        return GameObject.Find("Stage").GetComponent<GameStage>();
+    }
     void Start()
     {
         lastPlayerPosX = Mathf.FloorToInt(player.transform.position.x);
         whaleCountdown = whaleSpawnCooldown;
         sharkSpawnOffset = gameAreaWidth;
         GenerateTerrain(-gameAreaWidth, gameAreaWidth);
+        //Physics.IgnoreLayerCollision(6, 7, true); // Ignore collisions between sharks and obstacles, so sharks don't need pathfinding
     }
     void Update()
     {
@@ -94,6 +99,12 @@ public class GameStage : MonoBehaviour
 
     private void GenerateTerrain(int beginX, int endX)
     {
+        GeneratePlantation(beginX, endX);
+        GenerateObstacles(beginX, endX);
+    }
+
+    private void GeneratePlantation(int beginX, int endX)
+    {
         for (int x = beginX; x <= endX; x++)
         {
             int plantationLevel = 0;
@@ -107,7 +118,8 @@ public class GameStage : MonoBehaviour
             {
                 Vector3 pos = new(x, -gameAreaHeight + i, 0);
                 GameObject plant = GameObject.Instantiate(plantPrefab, pos, Quaternion.identity);
-                if (Random.value < plantSharkSpawnFreq) {
+                if (Random.value < plantSharkSpawnFreq)
+                {
                     GameObject shark = Instantiate(sharkPrefab, pos, Quaternion.identity);
                     Shark sharkScript = shark.GetComponent<Shark>();
                     sharkScript.state = Shark.MentalState.SLEEPING;
@@ -117,6 +129,178 @@ public class GameStage : MonoBehaviour
                     plant.GetComponent<Plant>().claimedBy = shark;
                 }
             }
+        }
+    }
+
+    /*
+    pillar generation:
+    NOTE: Since the player can't change their orientation instantly, their angle
+    in point A will affect the minimun x distance of each y of point B
+
+    - calculate minimum x distance between two points given their y coordinates, where
+    the player can go from point-to-point without hitting a wall
+    - based on previous and settings calculate possible range of the point's x
+    - based on above somehow calculate the relative x coordinates of two pillars, and
+    the y coordinates of each of their holes
+    - randomize the y-size of each hole based on settings and player collider y size
+    - the width of each pillar could be constant for now atleast
+
+    !1:
+    - y distance = pointB.y - pointA.y
+    - x distance = pointB.x - pointA.x
+    - y speed of player = playerTrajectorySlopeFromOrientation()
+    - y change in x distance = x distance * y speed of player
+    - if y change in x distance >= y distance, good, else bad
+    y change in x distance >= y distance
+    x distance * y speed of player >= y distance
+    x distance >= y distance / y speed of player
+    x distance >= y distance / playerTrajectorySlopeFromOrientation()
+
+    clarification: player's orientation is defined as the optimal orientation given
+    the x and y distance
+
+    optimal orientation: orientation where the trajectory is a straight line from point A to B,
+    i.e. angle of dir vector (pointB - pointA).normalized
+
+    whoops the actual problem is calculate minimum x distance between two points given their y coordinates,
+    where if the player starts at orientation 0 at point A, they can reach point B without hitting any walls,
+    if they rotate optimally every frame, i.e. rotate at maximum speed towards the optimal rotation at that frame
+
+    optimal orientation to reach point B from A at frame x:
+    Vec2 dif = point B - player position at current frame
+    Vec2 dir = dif.normalized
+
+    a given x distance is sufficient if the sums of y changes of each frame spent moving from point A to B
+    is >= distanceY
+
+    f(t) = 
+    current orientation: orientationFromOptimalAndAmountOfRotationAvailable(t * angleStep, optimalOrientation())
+    y change: current orientation * t * movementSpeed
+    where t is time spent moving so far
+
+    is splitting movement into 2 frames (f(0.5 * timeToMove) + f(0.5 * timeToMove)) = f(timeToMove) ?
+    yes, because at 2 frames the first frame's movement is applied first with that frame's orientation, and then
+    the same with the second, whereas with only 1 frame, all the rotating is done first, meaning the orientation
+    is closer to the optimal, and then the movement
+
+    the rotation done during previous frames is always beneficial
+
+    problem: current implementation calculates the movement of each frame
+    */
+
+    /*
+    Hole generation constraints:
+    - Each pillar must have atleast one hole which can be reached well from atleast one hole
+    on the previous pillar
+    ---I.e. the minimum distance between sequential pillars is 
+    - Could implement this:
+        - First pillar doesn't need any checks
+        - Subsequent pillars first generate a hole that can be reached well from atleast one hole on
+            the previous pillar
+    - 
+    */
+    void GenerateObstacles(int beginX, int endX) {
+        int x = beginX;
+        float[] previousPillarHoles = null;
+        // have to insert different logic for creating first pillar here
+        while (x < endX) {
+            (x, previousPillarHoles) = GeneratePillar(x, previousPillarHoles);
+            CreatePillarObject(x, previousPillarHoles);
+        }
+    }
+    // needs access to each of previous pillar's holes
+    (int posX, float[] holes) GeneratePillar(int x, float[] previousPillarHoles)
+    {
+        // randomize hole count
+        int holeCount = Random.Range(1, 4);
+        float[] holes = new float[holeCount];
+
+        const float minHoleDistance = 6;
+        float currentY = 0;
+        for (int i = 1; i < holeCount; i++)
+        {
+            // randomly pick a y for this hole
+            // generate random y's for new holes
+            // holes can't intersect with each other
+
+            // holes also shouldn't be too close to each other
+            holes[i] = Random.Range(currentY + minHoleDistance, pillarSizeY);
+            currentY = holes[i];
+        }
+        int distanceX = CalculateCompliantHole(previousPillarHoles, holes[0]);
+
+        return (posX: x + distanceX, holes);
+    }
+
+    private int CalculateCompliantHole(float[] previousPillarHoles, float currentHoleY)
+    {
+        // randomly pick 1 hole from previousPillarHoles
+        int indx = Random.Range(0, previousPillarHoles.Length - 1);
+        float prevHoleY = previousPillarHoles[indx];
+        // calculate minimum x
+        Player playerScript = player.GetComponent<Player>();
+        int minimumX = minimumXDistanceBetweenTwoPoints(currentHoleY - prevHoleY, 0.016f, playerScript.baseSpeed, playerScript.angleStep);
+        // add error and player imperfection margins to minimum x
+        minimumX = Mathf.FloorToInt(minimumX * 1.3f);
+        int maxX = Mathf.FloorToInt(minimumX * 1.3f);
+        // randomize x distance
+        return Random.Range(minimumX, maxX);
+    }
+
+    void CreatePillarObject(int pillarX, float[] pillarHoles) {
+            float y = 0;
+            foreach (float holeY in pillarHoles) {
+                CreateSubPillar(pillarX, y, holeY);
+                y = holeY + holeSize;
+            }
+            CreateSubPillar(pillarX, y, pillarSizeY);
+        }
+        void CreateSubPillar(int x, float pillarStartY, float pillarEndY) {
+            GameObject pillar = Instantiate(staticObstaclePrefab);
+            pillar.transform.position = new Vector3(x, pillarStartY, 0);
+            pillar.transform.localScale = new(1, pillarEndY - pillarStartY, 1);
+        }
+        int minimumXDistanceBetweenTwoPoints(float distanceY, float spf, float movementSpeed, float angleStep) {
+            int minDifX = -1;
+            Vector2 distance = new(0, distanceY);
+            for (int x = 0; minDifX == -1; x++) {
+                distance.x = x;
+                if (validDistanceX(distance, spf, movementSpeed, angleStep)) {
+                    return x;
+                }
+            }
+            return -1;
+        }
+
+        bool validDistanceX(Vector2 distance, float tpf, float movementSpeed, float angleStep) {
+            int frame = 0;
+            float accumulatedYChange = 0;
+            Vector2 currentPos = Vector2.zero;
+            while (accumulatedYChange < distance.y) {
+                Vector2 optimalDir = (distance - currentPos).normalized;
+                float deltaTime = tpf;
+                Vector2 currentDir = directionFromOptimalAndAmountOfRotationAvailable(frame * tpf * angleStep, optimalDir);
+                Vector2 movement = currentDir * deltaTime * movementSpeed;
+                currentPos += movement;
+                frame++;
+            }
+            return currentPos.x <= distance.x;
+        }
+        Vector2 directionFromOptimalAndAmountOfRotationAvailable(float rotationAvailable, Vector2 optimalDir) {
+            Vector2 startDir = Vector2.right;
+            float optimalOrientation = optimalDir.toEuler;
+            float startOrientation = startDir.toEuler;
+            
+            float orientationDifference = optimalOrientation - startOrientation;
+            float orientation;
+            if (startOrientation < optimalOrientation) {
+                orientation = Math.Min(startOrientation + rotationAvailable, optimalOrientation);
+            }
+            else {
+                orientation = Math.Max(startOrientation - rotationAvailable, optimalOrientation);
+            }
+
+            return orientation.toVec2();
         }
     }
 }

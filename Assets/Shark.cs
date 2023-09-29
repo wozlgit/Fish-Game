@@ -89,9 +89,14 @@ public class Shark : MonoBehaviour
             Utility.MoveTowardsTarget(gameObject, target, currentSpeed);
         }
 
-        if (transform.position.y < -gameStage.gameAreaHeight
-        || transform.position.y > gameStage.gameAreaHeight) {
+        if (transform.position.y < -GameStage.gameAreaHeight
+        || transform.position.y > GameStage.gameAreaHeight) {
             Destroy(gameObject);
+        }
+    }
+    void OnCollisionEnter2D(Collision2D col) {
+        if (col.collider.gameObject.CompareTag("Obstacle")) {
+            //Destroy(col.collider.gameObject);
         }
     }
 }

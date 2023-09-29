@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4828447925894209189}
   - component: {fileID: 7275404078268480831}
   - component: {fileID: -41134203604479713}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Shark
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -158,7 +158,8 @@ MonoBehaviour:
   damage: 5
   knockback: 500
   health: 5
-  baseSpeed: 6
+  baseSpeed: 11
+  gameStageObj: {fileID: 0}
   player: {fileID: 0}
   state: 0
   tirednessLimit: 1000
@@ -212,7 +213,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2344240355305915427}
   - component: {fileID: 234448105407362037}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Triangle
   m_TagString: Untagged
   m_Icon: {fileID: 0}

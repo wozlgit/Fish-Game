@@ -127,8 +127,56 @@ Problems:
               boring ones (like going straight), but instead restrict options to harder ones
     - Player is way too slow
 
-    !1 Make player way faster
+    !1 Make player way faster DONE
     !2 Implement static walls that restrict movement a lot, but that whales' break upon contact. Whales' will every once in a while
        go through them in a fast burst to achieve some goal. There should be some signs of when the whales' are about to charge, or the
-       player should be to roughly estimate when
+       player should be able to roughly estimate when
     !3 Implement some timed events
+      - Rocks constantly coming in from both axes and moving quickly
+      - Upon hit they do nothing except dmg
+
+    for obstacle in obstacles:
+      for face in obstacle.emptyFaces # no other obstacle or plant here
+        if random.value < plantSpawnChance:
+          face = new Plant
+    
+    difficulty comes from ?
+      - going through narrow gaps
+      - trying to not get caught by sharks in small places
+      - trying to do above while dodging falling/flying rocks
+
+
+    pillar generation:
+    NOTE: Since the player can't change their orientation instantly, their angle
+    in point A will affect the minimun x distance of each y of point B
+
+    - calculate minimum x distance between two points given their y coordinates, where
+    the player can go from point-to-point without hitting a wall
+    - based on previous and settings calculate possible range of the point's x
+    - based on above somehow calculate the relative x coordinates of two pillars, and
+      the y coordinates of each of their holes
+    - randomize the y-size of each hole based on settings and player collider y size
+    - the width of each pillar could be constant for now atleast
+    
+    !1:
+      - y distance = pointB.y - pointA.y
+      - x distance = pointB.x - pointA.x
+      - y speed of player = playerTrajectorySlopeFromOrientation()
+      - y change in x distance = x distance * y speed of player
+      - if y change in x distance >= y distance, good, else bad
+      y change in x distance >= y distance
+      x distance * y speed of player >= y distance
+      x distance >= y distance / y speed of player
+      x distance >= y distance / playerTrajectorySlopeFromOrientation()
+
+      clarification: player's orientation is defined as the optimal orientation given
+      the x and y distance
+
+      optimal orientation: orientation where the trajectory is a straight line from point A to B,
+      i.e. angle of dir vector (pointB - pointA).normalized
+
+    whales could rush to defend their nests!
+    the player could try to lure enemies there
+    maybe sharks would be those enemies
+    or maybe whales would defend their nests from
+    falling/flying rocks
