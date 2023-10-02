@@ -43,16 +43,20 @@ public class Player : MonoBehaviour
     void Update()
     {
         UpdateTransform();
-        if (transform.position.y < GameStage.gameAreaHeight) {
+        if (transform.position.y < -GameStage.gameAreaHeight) {
             transform.position = new Vector3(
                 transform.position.x,
                 -GameStage.gameAreaHeight,
                 transform.position.z
             );
         }
-    }
-    private void FixedUpdate() {
-        GetComponent<Rigidbody2D>().angularVelocity = 0;
+        else if (transform.position.y > GameStage.gameAreaHeight) {
+            transform.position = new Vector3(
+                transform.position.x,
+                GameStage.gameAreaHeight,
+                transform.position.z
+            );
+        }
     }
     private void UpdateTransform()
     {

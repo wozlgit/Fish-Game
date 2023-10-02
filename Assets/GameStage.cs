@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameStage : MonoBehaviour
 {
@@ -11,7 +13,6 @@ public class GameStage : MonoBehaviour
     [SerializeField] int whaleSpawnCooldown = 20;
     [SerializeField] int sharkSpawnCooldown = 4;
     [SerializeField] float cycleTime = 0.1f;
-
     [SerializeField] float powerupSpawnOffset = 20;
     [SerializeField] float sharkSpawnOffset;
 
@@ -21,10 +22,12 @@ public class GameStage : MonoBehaviour
     [SerializeField] GameObject plantPrefab;
     [SerializeField] GameObject whalePrefab;
     [SerializeField] GameObject staticObstaclePrefab;
+
     public const int gameAreaHeight = 10;
     public const int gameAreaWidth = 18;
     const float holeSize = 2;
     const float pillarSizeY = gameAreaHeight * 2;
+    private const float plantationSpawnChance = 0.3f;
     float time_counter = 0;
     float sharkTimer = 0;
     public static GameStage Get() {
@@ -36,7 +39,6 @@ public class GameStage : MonoBehaviour
         whaleCountdown = whaleSpawnCooldown;
         sharkSpawnOffset = gameAreaWidth;
         GenerateTerrain(-gameAreaWidth, gameAreaWidth);
-        //Physics.IgnoreLayerCollision(6, 7, true); // Ignore collisions between sharks and obstacles, so sharks don't need pathfinding
     }
     void Update()
     {
@@ -99,7 +101,7 @@ public class GameStage : MonoBehaviour
 
     private void GenerateTerrain(int beginX, int endX)
     {
-        GeneratePlantation(beginX, endX);
+        //GeneratePlantation(beginX, endX);
         GenerateObstacles(beginX, endX);
     }
 
@@ -117,18 +119,23 @@ public class GameStage : MonoBehaviour
             for (int i = 0; i < plantationLevel; i++)
             {
                 Vector3 pos = new(x, -gameAreaHeight + i, 0);
-                GameObject plant = GameObject.Instantiate(plantPrefab, pos, Quaternion.identity);
-                if (Random.value < plantSharkSpawnFreq)
-                {
-                    GameObject shark = Instantiate(sharkPrefab, pos, Quaternion.identity);
-                    Shark sharkScript = shark.GetComponent<Shark>();
-                    sharkScript.state = Shark.MentalState.SLEEPING;
-                    sharkScript.tiredness = sharkScript.tirednessLimit;
-
-                    plant.GetComponent<Plant>().isClaimed = true;
-                    plant.GetComponent<Plant>().claimedBy = shark;
-                }
+                CreatePlant(pos);
             }
+        }
+    }
+
+    private void CreatePlant(Vector3 pos)
+    {
+        GameObject plant = Instantiate(plantPrefab, pos, Quaternion.identity);
+        if (Random.value < plantSharkSpawnFreq)
+        {
+            GameObject shark = Instantiate(sharkPrefab, pos, Quaternion.identity);
+            Shark sharkScript = shark.GetComponent<Shark>();
+            sharkScript.state = Shark.MentalState.SLEEPING;
+            sharkScript.tiredness = sharkScript.tirednessLimit;
+
+            plant.GetComponent<Plant>().isClaimed = true;
+            plant.GetComponent<Plant>().claimedBy = shark;
         }
     }
 
@@ -199,44 +206,54 @@ public class GameStage : MonoBehaviour
             the previous pillar
     - 
     */
+    private int previousPillarX = 0;
+    private float[] previousPillarHoles;
     void GenerateObstacles(int beginX, int endX) {
-        int x = beginX;
-        float[] previousPillarHoles = null;
-        // have to insert different logic for creating first pillar here
-        while (x < endX) {
-            (x, previousPillarHoles) = GeneratePillar(x, previousPillarHoles);
-            CreatePillarObject(x, previousPillarHoles);
+        if (beginX >= previousPillarX) {
+            if (previousPillarX == 0) {
+                previousPillarHoles = GeneratePillarHoles();
+                CreatePillarObject(previousPillarX, previousPillarHoles);
+            }
+            while (previousPillarX <= endX) {
+                (previousPillarX, previousPillarHoles) = GeneratePillar(previousPillarX, previousPillarHoles);
+                CreatePillarObject(previousPillarX, previousPillarHoles);
+            }
         }
     }
-    // needs access to each of previous pillar's holes
-    (int posX, float[] holes) GeneratePillar(int x, float[] previousPillarHoles)
+    (int posX, float[] holes) GeneratePillar(int previousPillarX, float[] previousPillarHoles)
     {
-        // randomize hole count
-        int holeCount = Random.Range(1, 4);
-        float[] holes = new float[holeCount];
-
-        const float minHoleDistance = 6;
-        float currentY = 0;
-        for (int i = 1; i < holeCount; i++)
-        {
-            // randomly pick a y for this hole
-            // generate random y's for new holes
-            // holes can't intersect with each other
-
-            // holes also shouldn't be too close to each other
-            holes[i] = Random.Range(currentY + minHoleDistance, pillarSizeY);
-            currentY = holes[i];
-        }
+        float[] holes = GeneratePillarHoles();
         int distanceX = CalculateCompliantHole(previousPillarHoles, holes[0]);
 
-        return (posX: x + distanceX, holes);
+        return (posX: previousPillarX + distanceX, holes);
+    }
+
+    private static float[] GeneratePillarHoles()
+    {
+        const float minHoleDistance = 6;
+        const int maxHoleCount = 4;
+
+        float currentY = 0;
+        float[] holes = new float[maxHoleCount];
+        int holeCount = 0;
+        while (currentY + minHoleDistance + holeSize <= pillarSizeY
+        && holeCount < maxHoleCount)
+        {
+            // generate random y's for new holes
+            // holes can't intersect with each other, and shouldn't be too close to each other
+            currentY = Random.Range(currentY + minHoleDistance, pillarSizeY);
+            holes[holeCount] = currentY;
+            holeCount++;
+        }
+
+        return holes[..holeCount];
     }
 
     private int CalculateCompliantHole(float[] previousPillarHoles, float currentHoleY)
     {
         // randomly pick 1 hole from previousPillarHoles
-        int indx = Random.Range(0, previousPillarHoles.Length - 1);
-        float prevHoleY = previousPillarHoles[indx];
+        int index = Random.Range(0, previousPillarHoles.Length - 1);
+        float prevHoleY = previousPillarHoles[index];
         // calculate minimum x
         Player playerScript = player.GetComponent<Player>();
         int minimumX = minimumXDistanceBetweenTwoPoints(currentHoleY - prevHoleY, 0.016f, playerScript.baseSpeed, playerScript.angleStep);
@@ -248,59 +265,73 @@ public class GameStage : MonoBehaviour
     }
 
     void CreatePillarObject(int pillarX, float[] pillarHoles) {
-            float y = 0;
-            foreach (float holeY in pillarHoles) {
-                CreateSubPillar(pillarX, y, holeY);
-                y = holeY + holeSize;
-            }
-            CreateSubPillar(pillarX, y, pillarSizeY);
+        float y = 0;
+        foreach (float holeY in pillarHoles) {
+            CreateSubPillar(pillarX, y, holeY);
+            y = holeY + holeSize;
         }
-        void CreateSubPillar(int x, float pillarStartY, float pillarEndY) {
-            GameObject pillar = Instantiate(staticObstaclePrefab);
-            pillar.transform.position = new Vector3(x, pillarStartY, 0);
-            pillar.transform.localScale = new(1, pillarEndY - pillarStartY, 1);
-        }
-        int minimumXDistanceBetweenTwoPoints(float distanceY, float spf, float movementSpeed, float angleStep) {
-            int minDifX = -1;
-            Vector2 distance = new(0, distanceY);
-            for (int x = 0; minDifX == -1; x++) {
-                distance.x = x;
-                if (validDistanceX(distance, spf, movementSpeed, angleStep)) {
-                    return x;
+        CreateSubPillar(pillarX, y, pillarSizeY);
+    }
+    void CreateSubPillar(int x, float pillarStartY, float pillarEndY) {
+        GameObject pillar = Instantiate(staticObstaclePrefab);
+        float pillarSize = pillarEndY - pillarStartY;
+        pillar.transform.position = new Vector3(x, pillarStartY + pillarSize / 2 - gameAreaHeight, 0);
+        pillar.transform.localScale = new(1, pillarSize, 1);
+        for (float y = pillarStartY; y <= pillarEndY; y++) {
+            foreach (int plantX in new int[] {-1, 1}) {
+                if (Random.value <= plantationSpawnChance) {
+                    Vector3 pos = pillar.transform.position;
+                    pos.x += plantX;
+                    pos.y = y - gameAreaHeight;
+                    CreatePlant(pos);
                 }
             }
-            return -1;
+        }
+    }
+    int minimumXDistanceBetweenTwoPoints(float distanceY, float spf, float movementSpeed, float angleStep) {
+        return 8;
+        int minDifX = -1;
+        Vector2 distance = new(0, distanceY);
+        for (int x = 0; minDifX == -1; x++) {
+            distance.x = x;
+            if (validDistanceX(distance, spf, movementSpeed, angleStep)) {
+                return x;
+            }
+        }
+        return -1;
+    }
+
+    bool validDistanceX(Vector2 distance, float tpf, float movementSpeed, float angleStep) {
+        int frame = 0;
+        float accumulatedYChange = 0;
+        Vector2 currentPos = Vector2.zero;
+        while (accumulatedYChange < distance.y) {
+            Vector2 optimalDir = (distance - currentPos).normalized;
+            float deltaTime = tpf;
+            Vector2 currentDir = directionFromOptimalAndAmountOfRotationAvailable(frame * tpf * angleStep, optimalDir);
+            Vector2 movement = currentDir * deltaTime * movementSpeed;
+            currentPos += movement;
+            frame++;
+        }
+        return currentPos.x <= distance.x;
+    }
+    Vector2 directionFromOptimalAndAmountOfRotationAvailable(float rotationAvailable, Vector2 optimalDir) {
+        /*
+        Vector2 startDir = Vector2.right;
+        float optimalOrientation = optimalDir.toEuler;
+        float startOrientation = startDir.toEuler;
+        
+        float orientationDifference = optimalOrientation - startOrientation;
+        float orientation;
+        if (startOrientation < optimalOrientation) {
+            orientation = Math.Min(startOrientation + rotationAvailable, optimalOrientation);
+        }
+        else {
+            orientation = Math.Max(startOrientation - rotationAvailable, optimalOrientation);
         }
 
-        bool validDistanceX(Vector2 distance, float tpf, float movementSpeed, float angleStep) {
-            int frame = 0;
-            float accumulatedYChange = 0;
-            Vector2 currentPos = Vector2.zero;
-            while (accumulatedYChange < distance.y) {
-                Vector2 optimalDir = (distance - currentPos).normalized;
-                float deltaTime = tpf;
-                Vector2 currentDir = directionFromOptimalAndAmountOfRotationAvailable(frame * tpf * angleStep, optimalDir);
-                Vector2 movement = currentDir * deltaTime * movementSpeed;
-                currentPos += movement;
-                frame++;
-            }
-            return currentPos.x <= distance.x;
-        }
-        Vector2 directionFromOptimalAndAmountOfRotationAvailable(float rotationAvailable, Vector2 optimalDir) {
-            Vector2 startDir = Vector2.right;
-            float optimalOrientation = optimalDir.toEuler;
-            float startOrientation = startDir.toEuler;
-            
-            float orientationDifference = optimalOrientation - startOrientation;
-            float orientation;
-            if (startOrientation < optimalOrientation) {
-                orientation = Math.Min(startOrientation + rotationAvailable, optimalOrientation);
-            }
-            else {
-                orientation = Math.Max(startOrientation - rotationAvailable, optimalOrientation);
-            }
-
-            return orientation.toVec2();
-        }
+        return orientation.toVec2();
+        */
+        return Vector2.zero;
     }
 }

@@ -84,16 +84,21 @@ Whale destinations:
 ?
 
 TODO:
-Fix rotating DONE
-Player health DONE
-Gameover DONE
-Destroy terrain that is too far outside screen DONE
-Figure out a way for sharks to get destroyed (upon hitting the screen limits?) DONE - This might not be a good idea though
-Figure out a way for whales to get destroyed
+Increase number of holes generated per pillar
+  > Currently each pillar always has 1 - 2 holes, should be more like 2 - 4
+Destroy obstacles that are too far outside screen
+Scoring
+Whale behaviour (whale nests)
+  > Randomly generate whale nests at end of screen
+  > Whales' have 2 states: HUNGRY (eats powerups) and TIRED (sleeps at nest)
+  > When whales' go to TIRED state they quickly go to their nest, and then sleep there for some time
+  > Upon waking, they switch to the HUNGRY state
+Figure out a way for whales to get destroyed - prob after a certain amount of time
+Make sharks die less easily
+Evolution
+
 Invincibility frames - Prob not needed, since there is already knockback
 Improve on fake powerups
-Whale behaviour
-Evolution
 
 # Evolution
 - Improved senses (Lateral line sense/Electric sense) (can see sharks hidden in plantation easier; this could lower the fun of the game; or maybe make it so 
