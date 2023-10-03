@@ -5,15 +5,17 @@ using UnityEngine.UI;
 
 public class GameStage : MonoBehaviour
 {
-    [SerializeField] int maxPlantationLevel = 4;
-    [SerializeField] double plantSharkSpawnFreq = 0.05;
-    [SerializeField] double plantationSpawnFreq = 0.3;
-    [SerializeField] double plantationSpawnMoreChanceMult = 0.2;
-    [SerializeField] double fakePowerupSpawnFreq = 0.2;
-    [SerializeField] int whaleSpawnCooldown = 20;
-    [SerializeField] int sharkSpawnCooldown = 4;
-    [SerializeField] float cycleTime = 0.1f;
-    [SerializeField] float powerupSpawnOffset = 20;
+    [SerializeField] int maxPlantationLevel;
+    [SerializeField] double plantationSpawnFreq;
+    [SerializeField] double plantationSpawnMoreChanceMult;
+    // For spawning plants next to obstacles
+    [SerializeField] float plantationSpawnChance;
+    [SerializeField] double plantSharkSpawnFreq;
+    [SerializeField] double fakePowerupSpawnFreq;
+    [SerializeField] int whaleSpawnCooldown;
+    [SerializeField] int sharkSpawnCooldown;
+    [SerializeField] float cycleTime;
+    [SerializeField] float powerupSpawnOffset;
     [SerializeField] float sharkSpawnOffset;
 
     [SerializeField] GameObject player;
@@ -25,9 +27,6 @@ public class GameStage : MonoBehaviour
 
     public const int gameAreaHeight = 10;
     public const int gameAreaWidth = 18;
-    const float holeSize = 2;
-    const float pillarSizeY = gameAreaHeight * 2;
-    private const float plantationSpawnChance = 0.3f;
     float time_counter = 0;
     float sharkTimer = 0;
     public static GameStage Get() {
@@ -228,12 +227,13 @@ public class GameStage : MonoBehaviour
         return (posX: previousPillarX + distanceX, holes);
     }
 
-    private static float[] GeneratePillarHoles()
-    {
-        const float minHoleDistance = 6;
-        const int maxHoleCount = 4;
-        const int minHoleCount = 2;
-      
+    [SerializeField] float minHoleDistance;
+    [SerializeField] int maxHoleCount;
+    [SerializeField] int minHoleCount;
+    [SerializeField] float holeSize;
+    const float pillarSizeY = gameAreaHeight * 2;
+    private float[] GeneratePillarHoles()
+    {      
         int holeCount = Random.Range(minHoleCount, maxHoleCount + 1);
         int regionCount = holeCount + 1;
         float pillarObstacleSpace = pillarSizeY - holeSize * holeCount;

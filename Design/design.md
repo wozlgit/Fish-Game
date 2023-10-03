@@ -84,10 +84,11 @@ Whale destinations:
 ?
 
 TODO:
-Increase number of holes generated per pillar
+Bug: Last hole is sometimes generated too high up for the player to reach DONE
+Increase number of holes generated per pillar DONE
   > Currently each pillar always has 1 - 2 holes, should be more like 2 - 4
-Destroy obstacles that are too far outside screen
 Scoring
+Destroy obstacles that are too far outside screen
 Whale behaviour (whale nests)
   > Randomly generate whale nests at end of screen
   > Whales' have 2 states: HUNGRY (eats powerups) and TIRED (sleeps at nest)
