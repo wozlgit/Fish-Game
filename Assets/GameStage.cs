@@ -232,21 +232,30 @@ public class GameStage : MonoBehaviour
     {
         const float minHoleDistance = 6;
         const int maxHoleCount = 4;
-
-        float currentY = 0;
-        float[] holes = new float[maxHoleCount];
-        int holeCount = 0;
-        while (currentY + minHoleDistance + holeSize <= pillarSizeY
-        && holeCount < maxHoleCount)
-        {
-            // generate random y's for new holes
-            // holes can't intersect with each other, and shouldn't be too close to each other
-            currentY = Random.Range(currentY + minHoleDistance, pillarSizeY);
-            holes[holeCount] = currentY;
-            holeCount++;
+        const int minHoleCount = 2;
+      
+        int holeCount = Random.Range(minHoleCount, maxHoleCount + 1);
+        int regionCount = holeCount + 1;
+        float pillarObstacleSpace = pillarSizeY - holeSize * holeCount;
+        float regionSize = pillarObstacleSpace / regionCount;
+      
+        float[] holes = new float[holeCount];
+        float holeDistance = holeSize + regionSize;
+        holes[0] = regionSize;
+        for (int i = 1; i < holeCount; i++) {
+            holes[i] = holes[i - 1] + holeDistance;
         }
 
-        return holes[..holeCount];
+        // currentHole + holeSize + minHoleDistance <= nextHole
+        // nextHole - currentHole >= holeSize + minHoleDistance
+        float actualMinHoleDistance = holeSize + minHoleDistance;
+        // maximum absolute change for both holes to be atleast minimum distance from each other
+        float aHoleRange = (holeDistance - actualMinHoleDistance) / 2;
+        holes[0] += Random.Range(-regionSize, aHoleRange);
+        for (int i = 1; i < holeCount; i++) {
+            holes[i] += Random.Range(-aHoleRange, aHoleRange);
+        }
+        return holes;
     }
 
     private int CalculateCompliantHole(float[] previousPillarHoles, float currentHoleY)
