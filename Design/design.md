@@ -86,9 +86,13 @@ Whale destinations:
 TODO:
 Bug: Last hole is sometimes generated too high up for the player to reach DONE
 Increase number of holes generated per pillar DONE
-  > Currently each pillar always has 1 - 2 holes, should be more like 2 - 4
-Scoring
-Destroy obstacles that are too far outside screen
+Scoring DONE
+  - Since dying is only way for the game to end, surviving as long as possible should be the only goal
+  - A score should represent the run's length
+    - Should be measured in distance traveled or time survived?
+    - Maybe both?
+    - Should be just distance traveled at the start, since then efficient movement would be rewarded
+Destroy obstacles that are too far outside screen DONE
 Whale behaviour (whale nests)
   > Randomly generate whale nests at end of screen
   > Whales' have 2 states: HUNGRY (eats powerups) and TIRED (sleeps at nest)

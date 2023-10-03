@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class health_text : MonoBehaviour
+public class HealthText : MonoBehaviour
 {
     TMP_Text textCmp;
     private GameObject player;

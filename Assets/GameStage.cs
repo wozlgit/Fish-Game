@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
@@ -83,18 +84,32 @@ public class GameStage : MonoBehaviour
         if (difX > 0)
         {
             whaleCountdown -= difX;
-            if (whaleCountdown <= 0) {
+            if (whaleCountdown <= 0)
+            {
                 whaleCountdown = whaleSpawnCooldown + whaleCountdown;
                 Vector2 pos = new(cx + gameAreaWidth, Random.Range(-gameAreaHeight, gameAreaHeight));
                 Instantiate(whalePrefab, pos, Quaternion.identity);
             }
+
             GenerateTerrain(lastPlayerPosX + 1 + gameAreaWidth, lastPlayerPosX + difX + gameAreaWidth);
-            foreach (var plant in GameObject.FindGameObjectsWithTag("SharkSleepingPlace")) {
-                if (plant.transform.position.x <= cx - gameAreaWidth * 2) {
-                    Destroy(plant);
-                }
-            }
+            DestroyStaleTerrain(cx);
             lastPlayerPosX = cx;
+        }
+    }
+
+    private void DestroyStaleTerrain(int currentPlayerX)
+    {
+        GameObject[] obstacles = GameObject.FindGameObjectsWithTag("Obstacle");
+        GameObject[] plants = GameObject.FindGameObjectsWithTag("SharkSleepingPlace");
+        GameObject[] objects = new GameObject[obstacles.Length + plants.Length];
+        obstacles.CopyTo(objects, 0);
+        plants.CopyTo(objects, obstacles.Length);
+        foreach (var obj in objects)
+        {
+            if (obj.transform.position.x <= currentPlayerX - gameAreaWidth * 2)
+            {
+                Destroy(obj);
+            }
         }
     }
 
