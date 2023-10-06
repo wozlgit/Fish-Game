@@ -185,9 +185,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e1f43638759c2b439c2f451273cea72, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hungryRotationSpeed: 17
+  tiredRotationSpeed: 30
+  tiredSurgeSpeedMult: 15
   state: 1
   baseSpeed: 2
   knockback: 500
+  timeSlept: 0
+  sleepingTime: 2
 --- !u!50 &6397442473645876320
 Rigidbody2D:
   serializedVersion: 4
@@ -214,7 +219,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!61 &3793512694569586936
 BoxCollider2D:
   m_ObjectHideFlags: 0

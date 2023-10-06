@@ -25,6 +25,7 @@ public class GameStage : MonoBehaviour
     [SerializeField] GameObject plantPrefab;
     [SerializeField] GameObject whalePrefab;
     [SerializeField] GameObject staticObstaclePrefab;
+    [SerializeField] GameObject whaleNestPrefab;
 
     public const int gameAreaHeight = 10;
     public const int gameAreaWidth = 18;
@@ -101,9 +102,11 @@ public class GameStage : MonoBehaviour
     {
         GameObject[] obstacles = GameObject.FindGameObjectsWithTag("Obstacle");
         GameObject[] plants = GameObject.FindGameObjectsWithTag("SharkSleepingPlace");
-        GameObject[] objects = new GameObject[obstacles.Length + plants.Length];
+        GameObject[] whaleNests = GameObject.FindGameObjectsWithTag("WhaleNest");
+        GameObject[] objects = new GameObject[obstacles.Length + plants.Length + whaleNests.Length];
         obstacles.CopyTo(objects, 0);
         plants.CopyTo(objects, obstacles.Length);
+        whaleNests.CopyTo(objects, obstacles.Length + plants.Length);
         foreach (var obj in objects)
         {
             if (obj.transform.position.x <= currentPlayerX - gameAreaWidth * 2)
@@ -302,11 +305,14 @@ public class GameStage : MonoBehaviour
         pillar.transform.position = new Vector3(x, pillarStartY + pillarSize / 2 - gameAreaHeight, 0);
         pillar.transform.localScale = new(1, pillarSize, 1);
         for (float y = pillarStartY; y <= pillarEndY; y++) {
-            foreach (int plantX in new int[] {-1, 1}) {
-                if (Random.value <= plantationSpawnChance) {
-                    Vector3 pos = pillar.transform.position;
-                    pos.x += plantX;
-                    pos.y = y - gameAreaHeight;
+            foreach (int offsetX in new int[] {-1, 1}) {
+                Vector3 pos = pillar.transform.position;
+                pos.x += offsetX;
+                pos.y = y - gameAreaHeight;
+                if (Random.value <= 0.02) {
+                    Instantiate(whaleNestPrefab, pos, Quaternion.identity);
+                }
+                else if (Random.value <= plantationSpawnChance) {
                     CreatePlant(pos);
                 }
             }
