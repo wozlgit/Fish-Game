@@ -185,14 +185,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e1f43638759c2b439c2f451273cea72, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hungryRotationSpeed: 17
+  hungryRotationSpeed: 20
   tiredRotationSpeed: 30
-  tiredSurgeSpeedMult: 15
+  tiredSurgeSpeed: 30
   state: 1
-  baseSpeed: 2
+  baseSpeed: 5
   knockback: 500
   timeSlept: 0
   sleepingTime: 2
+  nestMinDistanceX: 4
 --- !u!50 &6397442473645876320
 Rigidbody2D:
   serializedVersion: 4

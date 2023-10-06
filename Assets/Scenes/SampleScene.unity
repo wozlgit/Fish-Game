@@ -423,6 +423,7 @@ MonoBehaviour:
   whalePrefab: {fileID: 3158263841115013856, guid: 408d3fa12b039894c9d0f91e3d0e8db8, type: 3}
   staticObstaclePrefab: {fileID: 2043335577680423213, guid: bcbf46a10f9325746bfe95f23960797d, type: 3}
   whaleNestPrefab: {fileID: 925674080396775873, guid: 67e4c2b8c09c6c9498fc453e64523c9f, type: 3}
+  terrainGenerationAhead: 10
   minHoleDistance: 6
   maxHoleCount: 4
   minHoleCount: 2

@@ -125,10 +125,12 @@ Whale behaviour (whale nests) DONE
 Figure out a way for whales to get destroyed - prob after a certain amount of time
 Make sharks die less easily
 Evolution
-Actual shark ANGRYness
+Actual shark ANGRYness DONE
 Angry sharks start facing the opposite direction to the player, and when they try to rotate, they end up going
 off the screen limits and getting destroyed. Therefore angered sharks barely ever get to chase the player.
-  ? Make just awakened sharks (or just ANGRY sharks in general!) rotate faster
+  ? Make just awakened sharks (or just ANGRY sharks in general!) rotate faster DONE
+Make whales only surge to whale nests ahead of the player
+Or maybe make whale nests get destroyed upon collision with whales
 
 Invincibility frames - Prob not needed, since there is already knockback
 Improve on fake powerups

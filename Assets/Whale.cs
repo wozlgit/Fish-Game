@@ -6,7 +6,7 @@ class Whale: MonoBehaviour {
 
     [SerializeField] int hungryRotationSpeed;
     [SerializeField] int tiredRotationSpeed;
-    [SerializeField] int tiredSurgeSpeedMult;
+    [SerializeField] int tiredSurgeSpeed;
     public WhaleState state = WhaleState.HUNGRY;
     float currentSpeed;
     public float baseSpeed;
@@ -14,6 +14,7 @@ class Whale: MonoBehaviour {
     GameObject target = null;
     public float timeSlept;
     public float sleepingTime;
+    [SerializeField] float nestMinDistanceX;
     void Start() {
         currentSpeed = baseSpeed;
     }
@@ -28,9 +29,9 @@ class Whale: MonoBehaviour {
         }
         else if(state == WhaleState.TIRED_ROT)
         {
-            if (target == null) {
-                GameObject[] nests = GameObject.FindGameObjectsWithTag("WhaleNest");
-                target = ClosestGameObject(nests);
+            if (target == null)
+            {
+                target = ClosestNest();
             }
             if (target != null) {
                 Utility.MoveTowardsTarget(gameObject, target, 0, tiredRotationSpeed);
@@ -43,11 +44,10 @@ class Whale: MonoBehaviour {
         else if(state == WhaleState.TIRED_SURGE)
         {
             if (target == null) {
-                GameObject[] nests = GameObject.FindGameObjectsWithTag("WhaleNest");
-                target = ClosestGameObject(nests);
+                target = ClosestNest();
             }
             if (target != null) {
-                Utility.MoveTowardsTarget(gameObject, target, baseSpeed * tiredSurgeSpeedMult, 0);
+                Utility.MoveTowardsTarget(gameObject, target, tiredSurgeSpeed, 0);
                 if (transform.position.x > (target.transform.position.x + 5)) {
                     state = WhaleState.SLEEPING;
                     timeSlept = 0;
@@ -71,11 +71,27 @@ class Whale: MonoBehaviour {
         }
     }
 
-    private GameObject ClosestGameObject(GameObject[] powerups)
+    private GameObject ClosestNest()
+    {
+        GameObject[] nests = GameObject.FindGameObjectsWithTag("WhaleNest");
+        GameObject[] actualNests = new GameObject[nests.Length];
+        int index = 0;
+        foreach (var nest in nests)
+        {
+            if (nest.transform.position.x > (transform.position.x + nestMinDistanceX))
+            {
+                actualNests[index] = nest;
+                index++;
+            }
+        }
+        return ClosestGameObject(actualNests[..index]);
+    }
+
+    private GameObject ClosestGameObject(GameObject[] objects)
     {
         GameObject target = null;
         float lowestLength = Mathf.Infinity;
-        foreach (var other in powerups)
+        foreach (var other in objects)
         {
             float lengthCmp = (other.transform.position - transform.position).sqrMagnitude;
             if (lengthCmp < lowestLength)

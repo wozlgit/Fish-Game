@@ -164,6 +164,10 @@ MonoBehaviour:
   state: 0
   tirednessLimit: 1000
   tiredness: 0
+  awakenedFastRotTime: 3
+  justAwakenedRotSpeedMult: 2
+  angryMovementSpeedMult: 1.4
+  angryRotSpeedMult: 1.4
 --- !u!50 &7275404078268480831
 Rigidbody2D:
   serializedVersion: 4

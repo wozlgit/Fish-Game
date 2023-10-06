@@ -24,6 +24,11 @@ public class Shark : MonoBehaviour
     float angriness = 0;
     GameObject target;
     float currentSpeed;
+    float awakenedTimer;
+    [SerializeField] float awakenedFastRotTime;
+    [SerializeField] float justAwakenedRotSpeedMult;
+    [SerializeField] float angryMovementSpeedMult;
+    [SerializeField] float angryRotSpeedMult;
     void Start()
     {
         player = GameObject.Find("Player");
@@ -42,11 +47,13 @@ public class Shark : MonoBehaviour
             if (tiredness <= 0) {
                 tiredness = 0;
                 state = MentalState.HUNGRY;
+                awakenedTimer = 0;
                 target = player;
             }
             if ((player.transform.position - transform.position).magnitude < awakenAngerDistance) {
                 tiredness = 0;
                 state = MentalState.ANGRY;
+                awakenedTimer = 0;
                 target = player;
             }
         }
@@ -86,7 +93,20 @@ public class Shark : MonoBehaviour
         if ((state == MentalState.HUNGRY || state == MentalState.ANGRY)
         && target == player)
         {
-            Utility.MoveTowardsTarget(gameObject, target, currentSpeed);
+            float rotSpeed = 35;
+            float movementSpeed = currentSpeed;
+            if (awakenedTimer <= awakenedFastRotTime) {
+                rotSpeed *= justAwakenedRotSpeedMult;
+                awakenedTimer += Time.deltaTime;
+            }
+            if (state == MentalState.ANGRY) {
+                movementSpeed *= angryMovementSpeedMult;
+                rotSpeed *= angryRotSpeedMult;
+            }
+            Utility.MoveTowardsTarget(gameObject, target, movementSpeed, rotSpeed);
+        }
+        else {
+            awakenedTimer = float.PositiveInfinity;
         }
 
         if (transform.position.y < -GameStage.gameAreaHeight

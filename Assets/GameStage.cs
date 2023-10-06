@@ -29,6 +29,7 @@ public class GameStage : MonoBehaviour
 
     public const int gameAreaHeight = 10;
     public const int gameAreaWidth = 18;
+    public int terrainGenerationAhead;
     float time_counter = 0;
     float sharkTimer = 0;
     public static GameStage Get() {
@@ -39,7 +40,7 @@ public class GameStage : MonoBehaviour
         lastPlayerPosX = Mathf.FloorToInt(player.transform.position.x);
         whaleCountdown = whaleSpawnCooldown;
         sharkSpawnOffset = gameAreaWidth;
-        GenerateTerrain(-gameAreaWidth, gameAreaWidth);
+        GenerateTerrain(-gameAreaWidth, gameAreaWidth + terrainGenerationAhead);
     }
     void Update()
     {
@@ -92,7 +93,10 @@ public class GameStage : MonoBehaviour
                 Instantiate(whalePrefab, pos, Quaternion.identity);
             }
 
-            GenerateTerrain(lastPlayerPosX + 1 + gameAreaWidth, lastPlayerPosX + difX + gameAreaWidth);
+            GenerateTerrain(
+                lastPlayerPosX + 1 + gameAreaWidth + terrainGenerationAhead,
+                lastPlayerPosX + difX + gameAreaWidth + terrainGenerationAhead
+            );
             DestroyStaleTerrain(cx);
             lastPlayerPosX = cx;
         }
